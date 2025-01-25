@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
 
@@ -8,9 +9,27 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
+
 def get_db_connection():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+
+    db_url = os.getenv('DATABASE_URL')
+
+
+    parsed_url = urlparse(db_url)
+
+
+    conn_params = {
+        'dbname': parsed_url.path[1:],
+        'user': parsed_url.username,
+        'password': parsed_url.password,
+        'host': parsed_url.hostname,
+        'port': parsed_url.port,
+    }
+
+    conn = psycopg2.connect(**conn_params)
     return conn
+
+
 
 @app.route('/')
 def index():
