@@ -53,7 +53,15 @@ def show_urls():
     conn.close()
     return render_template('urls.html', urls=urls)
 
-
+@app.route('/urls/<int:id>')
+def show_url(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM urls WHERE id = %s", (id,))
+    url = cur.fetchone()
+    cur.close()
+    conn.close()
+    return render_template('url.html', url=url)
 
 if __name__ == '__main__':
     app.run(debug=True)
