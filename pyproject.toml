@@ -9,5 +9,6 @@ packages = [{include = "page_analyzer"}]
 dependencies = [
     "flask",
     "gunicorn",
-    "python-dotenv"
+    "python-dotenv",
+    "psycopg2"
 ]

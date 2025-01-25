@@ -1,7 +1,7 @@
+from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, flash
 
 load_dotenv()
 
@@ -15,7 +15,6 @@ def get_db_connection():
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/add_url', methods=['POST'])
 def add_url():
@@ -31,9 +30,9 @@ def add_url():
         url_id = cur.fetchone()
         conn.commit()
         if url_id:
-            flash('URL успешно добавлен', 'success')
+            flash('Страница успешно добавлена', 'success')
         else:
-            flash('URL уже существует', 'info')
+            flash('Страница уже существует', 'info')
     except Exception as e:
         flash('Ошибка при добавлении URL', 'error')
     finally:
@@ -41,7 +40,6 @@ def add_url():
         conn.close()
 
     return redirect(url_for('index'))
-
 
 @app.route('/urls')
 def show_urls():
@@ -62,6 +60,3 @@ def show_url(id):
     cur.close()
     conn.close()
     return render_template('url.html', url=url)
-
-if __name__ == '__main__':
-    app.run(debug=True)
