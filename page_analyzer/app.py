@@ -120,7 +120,6 @@
 #
 
 
-from page_analyzer.database import db
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
@@ -129,31 +128,16 @@ from urllib.parse import urlparse
 import logging
 import requests
 from bs4 import BeautifulSoup
+from page_analyzer.database import db
 
-# Загрузка переменных окружения
 load_dotenv()
 
-# Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.jinja_env.filters['truncate'] = lambda s, length: (s[:length - 3] + '...') if s and len(s) > length else s
-
-
-def get_db_connection():
-    """Создает и возвращает соединение с базой данных."""
-    db_url = os.getenv('DATABASE_URL')
-    parsed_url = urlparse(db_url)
-    conn_params = {
-        'dbname': parsed_url.path[1:],
-        'user': parsed_url.username,
-        'password': parsed_url.password,
-        'host': parsed_url.hostname,
-        'port': parsed_url.port,
-    }
-    return psycopg2.connect(**conn_params)
 
 
 def normalize_url(url):
@@ -171,62 +155,32 @@ def is_valid_url(url):
 
 @app.route('/')
 def index():
-    """Главная страница."""
     return render_template('index.html')
 
 
 @app.route('/add_url', methods=['POST'])
 def add_url():
-    """Добавляет новый URL в базу данных."""
     raw_url = request.form.get('url', '').strip()
-    url = normalize_url(raw_url)
-    logger.debug(f"Получен URL: {url}")
-
-    # Проверка валидности URL
-    if not url or len(url) > 255 or not is_valid_url(url):
+    if not raw_url or len(raw_url) > 255 or not is_valid_url(raw_url):
         flash('Некорректный URL', 'danger')
-        logger.debug("URL не прошел валидацию")
         return redirect(url_for('index'))
 
-    # Нормализация URL
-    normalized_url = normalize_url(url)
+    url = normalize_url(raw_url)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
     try:
-        # Попытка добавить URL в базу
-        cur.execute("""
-            INSERT INTO urls (name)
-            VALUES (%s)
-            ON CONFLICT (name) DO NOTHING
-            RETURNING id
-        """, (normalized_url,))
-        url_id = cur.fetchone()
-        conn.commit()
-
-        if url_id:
-            # Если URL добавлен
-            flash('Страница успешно добавлена', 'success')
-            logger.debug(f"URL добавлен, ID: {url_id[0]}")
-            return redirect(url_for('show_url', id=url_id[0]))
-        else:
-            # Если URL уже существует
-            cur.execute("SELECT id FROM urls WHERE name = %s", (normalized_url,))
-            existing_url_id = cur.fetchone()[0]
+        existing_id = db.get_url_id_by_name(url)
+        if existing_id:
             flash('Страница уже существует', 'info')
-            logger.debug(f"URL уже существует, ID: {existing_url_id}")
-            return redirect(url_for('show_url', id=existing_url_id))
-    except Exception as e:
-        # Обработка ошибок
-        conn.rollback()
-        flash('Ошибка при добавлении URL', 'danger')
-        logger.error(f"Ошибка при добавлении URL: {str(e)}")
-    finally:
-        # Закрытие соединения с базой
-        cur.close()
-        conn.close()
+            return redirect(url_for('show_url', id=existing_id))
 
-    return redirect(url_for('index'))
+        new_id = db.insert_url(url)
+        flash('Страница успешно добавлена', 'success')
+        return redirect(url_for('show_url', id=new_id))
+
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        flash('Ошибка базы данных', 'danger')
+        return redirect(url_for('index'))
 
 
 @app.get('/urls/<int:id>')
@@ -236,36 +190,34 @@ def show_url(id):
         if not url:
             flash('Сайт не найден', 'danger')
             return redirect(url_for('show_urls'))
+
         checks = db.get_url_checks(id)
         return render_template('url.html', url=url, checks=checks)
+
     except Exception as e:
-        flash('Ошибка базы данных', 'danger')
         logger.error(f"Database error: {str(e)}")
+        flash('Ошибка базы данных', 'danger')
         return redirect(url_for('index'))
 
 
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
-    """Проверяет URL и добавляет результат в базу."""
-    url_data = db.get_url_by_id(id)
-    if not url_data:
-        flash('Сайт не найден', 'danger')
-        return redirect(url_for('show_urls'))
-
     try:
-        # Запрос к сайту
+        url_data = db.get_url_by_id(id)
+        if not url_data:
+            flash('Сайт не найден', 'danger')
+            return redirect(url_for('show_urls'))
+
         response = requests.get(url_data['name'], timeout=5)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Извлечение данных
+        soup = BeautifulSoup(response.text, 'html.parser')
         h1 = soup.h1.text.strip() if soup.h1 else None
         title = soup.title.text.strip() if soup.title else None
         description_tag = soup.find('meta', attrs={'name': 'description'})
         description = description_tag['content'].strip() if description_tag else None
 
-        # Добавление проверки в базу
-        db.create_url_check({
+        db.insert_url_check({
             'url_id': id,
             'status_code': response.status_code,
             'h1': h1,
@@ -273,24 +225,27 @@ def check_url(id):
             'description': description
         })
         flash('Страница успешно проверена', 'success')
-    except requests.exceptions.RequestException as e:
-        # Обработка ошибок запроса
+
+    except requests.RequestException as e:
+        logger.error(f"Request error: {str(e)}")
         flash('Произошла ошибка при проверке', 'danger')
-        logger.error(f"Ошибка при проверке URL: {str(e)}")
     except Exception as e:
-        # Обработка других ошибок
+        logger.error(f"General error: {str(e)}")
         flash('Непредвиденная ошибка', 'danger')
-        logger.error(f"Непредвиденная ошибка: {str(e)}")
 
     return redirect(url_for('show_url', id=id))
 
 
 @app.get('/urls')
 def show_urls():
-    """Отображает список всех URL."""
-    urls = db.get_urls()
-    return render_template('urls.html', urls=urls)
+    try:
+        urls = db.get_all_urls_with_checks()
+        return render_template('urls.html', urls=urls)
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        flash('Ошибка базы данных', 'danger')
+        return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8001)
