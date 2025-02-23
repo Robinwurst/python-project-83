@@ -82,17 +82,21 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 load_dotenv()
 
 def get_connection():
-    return psycopg2.connect(
-        dbname=os.getenv('POSTGRES_DB'),
-        user=os.getenv('POSTGRES_USER'),
-        password=os.getenv('POSTGRES_PASSWORD'),
-        host='db',
-        port=5432
-    )
+    db_url = os.getenv('DATABASE_URL')
+    parsed_url = urlparse(db_url)
+    conn_params = {
+        'dbname': parsed_url.path[1:],
+        'user': parsed_url.username,
+        'password': parsed_url.password,
+        'host': parsed_url.hostname,
+        'port': parsed_url.port,
+    }
+    return psycopg2.connect(**conn_params)
 
 def get_url_id_by_name(url):
     with get_connection() as conn:
