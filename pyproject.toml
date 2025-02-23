@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "page_analyzer"
 readme = "README.md"
 requires-python = ">=3.13"
-packages = [{include = "page_analyzer"}]
 
 dependencies = [
     "flask",
@@ -12,5 +11,9 @@ dependencies = [
     "python-dotenv",
     "psycopg2-binary",
     "requests",
-    "bs4"
+    "beautifulsoup4>=4.12.3"
 ]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
