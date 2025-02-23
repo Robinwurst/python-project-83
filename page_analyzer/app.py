@@ -166,12 +166,12 @@ def add_url():
     # Проверка пустого URL
     if not raw_url:
         flash('URL обязателен', 'danger')
-        return redirect(url_for('index')), 400
+        return redirect(url_for('index'))
 
     # Проверка длины URL
     if len(raw_url) > 255:
         flash('URL превышает 255 символов', 'danger')
-        return redirect(url_for('index')), 400
+        return redirect(url_for('index'))
 
     # Проверка валидности URL
     try:
@@ -182,7 +182,7 @@ def add_url():
             raise ValueError
     except ValueError:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('index')), 400
+        return redirect(url_for('index'))
 
     try:
         normalized_url = normalize_url(raw_url)
