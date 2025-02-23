@@ -1,24 +1,24 @@
 <table class="table table-bordered table-hover" data-test="urls">
-  <thead class="table-light">
+    <thead class="table-light">
         <tr>
             <th>ID</th>
-            <th>Имя сайта</th>
+            <th>Имя</th>
             <th>Последняя проверка</th>
             <th>Код ответа</th>
         </tr>
     </thead>
-<tbody>
-    {% for url in urls %}
-        <tr>
-            <td>{{ url[0] }}</td>
-            <td><a href="{{ url_for('show_url', id=url[0]) }}">{{ url[1] }}</a></td>
-            <td>{{ url[3].strftime('%Y-%m-%d') if url[3] else '' }}</td>
-            <td>{{ url[4] if url[4] else '' }}</td>
-        </tr>
-    {% else %}
-        <tr>
-            <td colspan="4" class="text-center">Нет добавленных сайтов</td>
-        </tr>
-    {% endfor %}
-</tbody>
+    <tbody>
+        {% for url in urls %}
+            <tr>
+                <td>{{ url[0] }}</td> <!-- ID -->
+                <td><a href="{{ url_for('show_url', id=url[0]) }}">{{ url[1] }}</a></td>
+                <td>{{ url[3].strftime('%Y-%m-%d') if url[3] }}</td>
+                <td>{{ url[4] if url[4] }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" class="text-center">Нет добавленных сайтов</td>
+            </tr>
+        {% endfor %}
+    </tbody>
 </table>
