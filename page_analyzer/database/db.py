@@ -37,17 +37,17 @@ def get_url_checks(url_id):
         with conn.cursor() as cursor:
             cursor.execute("""
                 SELECT 
-                    id,
-                    created_at,
-                    status_code,
-                    h1,
-                    title,
+                    id, 
+                    created_at, 
+                    status_code, 
+                    h1, 
+                    title, 
                     description
                 FROM url_checks 
                 WHERE url_id = %s 
                 ORDER BY created_at DESC
             """, (url_id,))
-            return cursor.fetchall()
+            return [dict(id=row[0], created_at=row[1], status_code=row[2], h1=row[3], title=row[4], description=row[5]) for row in cursor.fetchall()]
 
 
 def get_urls():
@@ -65,4 +65,4 @@ def get_urls():
                 GROUP BY u.id
                 ORDER BY u.id DESC
             """)
-            return cursor.fetchall()
+            return [dict(id=row[0], name=row[1], created_at=row[2], last_check=row[3], last_status=row[4]) for row in cursor.fetchall()]

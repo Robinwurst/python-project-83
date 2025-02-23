@@ -42,8 +42,10 @@ def index():
 
 @app.route('/add_url', methods=['POST'])
 def add_url():
-    url = request.form['url']
-    # ... валидация URL ...
+    url = request.form.get('url', '').strip()
+    if not url or len(url) > 255:
+        flash('Некорректный URL', 'danger')
+        return redirect(url_for('index'))
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -51,16 +53,21 @@ def add_url():
         cur.execute("""
             INSERT INTO urls (name) 
             VALUES (%s) 
-            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name 
+            ON CONFLICT (name) DO NOTHING 
             RETURNING id
         """, (url,))
-        url_id = cur.fetchone()[0]
+        url_id = cur.fetchone()
         conn.commit()
-        flash('Страница успешно добавлена', 'success')
-        return redirect(url_for('show_url', id=url_id))
+        if url_id:
+            flash('Страница успешно добавлена', 'success')
+            return redirect(url_for('show_url', id=url_id[0]))
+        else:
+            flash('Страница уже существует', 'info')
+            return redirect(url_for('show_url', id=cur.execute("SELECT id FROM urls WHERE name = %s", (url,)).fetchone()[0]))
     except Exception as e:
         conn.rollback()
-        flash('Ошибка при добавлении URL', 'error')
+        flash('Ошибка при добавлении URL', 'danger')
+        app.logger.error(f"Ошибка: {str(e)}")
     finally:
         cur.close()
         conn.close()
@@ -82,17 +89,15 @@ def show_url(id):
 
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
-    url_data = db.get_url_by_id(id)
-    if not url_data:
+    url = db.get_url_by_id(id)
+    if not url:
         flash('Сайт не найден', 'danger')
         return redirect(url_for('show_urls'))
 
     try:
-        response = requests.get(url_data[1], timeout=5)
+        response = requests.get(url.name, timeout=5)
         response.raise_for_status()
-
         soup = BeautifulSoup(response.text, 'html.parser')
-
 
         h1 = soup.h1.text.strip() if soup.h1 else None
         title = soup.title.text.strip() if soup.title else None
@@ -111,7 +116,7 @@ def check_url(id):
         flash('Произошла ошибка при проверке', 'danger')
     except Exception as e:
         flash('Непредвиденная ошибка', 'danger')
-
+        app.logger.error(f"Ошибка проверки: {str(e)}")
     return redirect(url_for('show_url', id=id))
 
 
