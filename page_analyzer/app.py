@@ -3,6 +3,7 @@ import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
+from database import db
 
 load_dotenv()
 
@@ -60,22 +61,43 @@ def add_url():
 
     return redirect(url_for('index'))
 
-@app.route('/urls')
-def show_urls():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM urls ORDER BY created_at DESC")
-    urls = cur.fetchall()
-    cur.close()
-    conn.close()
-    return render_template('urls.html', urls=urls)
 
-@app.route('/urls/<int:id>')
+@app.get('/urls/<int:id>')
 def show_url(id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM urls WHERE id = %s", (id,))
-    url = cur.fetchone()
-    cur.close()
-    conn.close()
-    return render_template('url.html', url=url)
+    url = db.get_url_by_id(id)
+    if not url:
+        flash('Сайт не найден', 'danger')
+        return redirect(url_for('show_urls'))
+
+
+    checks = db.get_url_checks(id)
+
+    return render_template('url.html', url=url, checks=checks)
+
+
+
+@app.post('/urls/<int:id>/checks')
+def check_url(id):
+    url = db.get_url_by_id(id)
+    if not url:
+        flash('Сайт не найден', 'danger')
+        return redirect(url_for('show_urls'))
+
+    try:
+        # Пока создаем "пустую" проверку (остальные поля будут на след. шаге)
+        db.create_url_check({
+            'url_id': id,
+            # status_code, h1 и др. пока NULL
+        })
+        flash('Страница успешно проверена', 'success')
+    except Exception as e:
+        flash('Ошибка при проверке', 'danger')
+
+    return redirect(url_for('show_url', id=id))
+
+
+
+@app.get('/urls')
+def show_urls():
+    urls = db.get_urls()  # Используем новую функцию из db.py
+    return render_template('urls.html', urls=urls)
