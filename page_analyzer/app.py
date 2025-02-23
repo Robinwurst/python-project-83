@@ -157,16 +157,14 @@ def get_db_connection():
 
 
 def normalize_url(url):
-    """Нормализует URL, удаляя слеши в конце."""
-    parsed_url = urlparse(url)
-    return f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path.rstrip('/')}"
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}"
 
 
 def is_valid_url(url):
-    """Проверяет, является ли URL валидным."""
     try:
         result = urlparse(url)
-        return all([result.scheme, result.netloc])
+        return all([result.scheme in ['http', 'https'], result.netloc])
     except ValueError:
         return False
 
@@ -180,7 +178,8 @@ def index():
 @app.route('/add_url', methods=['POST'])
 def add_url():
     """Добавляет новый URL в базу данных."""
-    url = request.form.get('url', '').strip()
+    raw_url = request.form.get('url', '').strip()
+    url = normalize_url(raw_url)
     logger.debug(f"Получен URL: {url}")
 
     # Проверка валидности URL
@@ -232,14 +231,17 @@ def add_url():
 
 @app.get('/urls/<int:id>')
 def show_url(id):
-    """Отображает страницу с информацией о URL."""
-    url = db.get_url_by_id(id)
-    if not url:
-        flash('Сайт не найден', 'danger')
-        return redirect(url_for('show_urls'))
-
-    checks = db.get_url_checks(id)
-    return render_template('url.html', url=url, checks=checks)
+    try:
+        url = db.get_url_by_id(id)
+        if not url:
+            flash('Сайт не найден', 'danger')
+            return redirect(url_for('show_urls'))
+        checks = db.get_url_checks(id)
+        return render_template('url.html', url=url, checks=checks)
+    except Exception as e:
+        flash('Ошибка базы данных', 'danger')
+        logger.error(f"Database error: {str(e)}")
+        return redirect(url_for('index'))
 
 
 @app.post('/urls/<int:id>/checks')
