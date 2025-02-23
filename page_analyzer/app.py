@@ -119,6 +119,8 @@
 #     return render_template('urls.html', urls=urls)
 #
 
+
+from page_analyzer.database import db
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
@@ -127,7 +129,6 @@ from urllib.parse import urlparse
 import logging
 import requests
 from bs4 import BeautifulSoup
-from page_analyzer.database import db
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -153,6 +154,12 @@ def get_db_connection():
         'port': parsed_url.port,
     }
     return psycopg2.connect(**conn_params)
+
+
+def normalize_url(url):
+    """Нормализует URL, удаляя слеши в конце."""
+    parsed_url = urlparse(url)
+    return f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path.rstrip('/')}"
 
 
 def is_valid_url(url):
@@ -182,6 +189,9 @@ def add_url():
         logger.debug("URL не прошел валидацию")
         return redirect(url_for('index'))
 
+    # Нормализация URL
+    normalized_url = normalize_url(url)
+
     conn = get_db_connection()
     cur = conn.cursor()
     try:
@@ -191,7 +201,7 @@ def add_url():
             VALUES (%s)
             ON CONFLICT (name) DO NOTHING
             RETURNING id
-        """, (url,))
+        """, (normalized_url,))
         url_id = cur.fetchone()
         conn.commit()
 
@@ -202,7 +212,7 @@ def add_url():
             return redirect(url_for('show_url', id=url_id[0]))
         else:
             # Если URL уже существует
-            cur.execute("SELECT id FROM urls WHERE name = %s", (url,))
+            cur.execute("SELECT id FROM urls WHERE name = %s", (normalized_url,))
             existing_url_id = cur.fetchone()[0]
             flash('Страница уже существует', 'info')
             logger.debug(f"URL уже существует, ID: {existing_url_id}")
