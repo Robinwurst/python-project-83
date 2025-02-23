@@ -141,16 +141,15 @@ app.jinja_env.filters['truncate'] = lambda s, length: (s[:length - 3] + '...') i
 
 def normalize_url(url):
     parsed = urlparse(url)
-    scheme = parsed.scheme.lower()
-    netloc = parsed.netloc.lower()
-    path = parsed.path.rstrip('/')
-    return f"{scheme}://{netloc}{path}" if path else f"{scheme}://{netloc}"
+    return f"{parsed.scheme}://{parsed.netloc}".lower().rstrip('/')
 
 
 def is_valid_url(url):
     try:
         result = urlparse(url)
-        return all([result.scheme in ['http', 'https'], result.netloc])
+        if not all([result.scheme, result.netloc]):
+            return False
+        return result.scheme in ['http', 'https']
     except ValueError:
         return False
 
@@ -164,36 +163,33 @@ def index():
 def add_url():
     raw_url = request.form.get('url', '').strip()
 
-    # Проверка на пустой URL
     if not raw_url:
         flash('URL обязателен', 'danger')
-        return redirect(url_for('index')), 400
+        return redirect(url_for('index'))
 
-    # Проверка длины
     if len(raw_url) > 255:
         flash('URL превышает 255 символов', 'danger')
-        return redirect(url_for('index')), 400
+        return redirect(url_for('index'))
 
-    # Проверка валидности
     if not is_valid_url(raw_url):
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('index')), 400  # Явный возврат 400
-
-    url = normalize_url(raw_url)
+        return redirect(url_for('index'))
 
     try:
-        existing_id = db.get_url_id_by_name(url)
+        normalized_url = normalize_url(raw_url)
+        existing_id = db.get_url_id_by_name(normalized_url)
+
         if existing_id:
             flash('Страница уже существует', 'info')
             return redirect(url_for('show_url', id=existing_id))
 
-        new_id = db.insert_url(url)
+        new_id = db.insert_url(normalized_url)
         flash('Страница успешно добавлена', 'success')
         return redirect(url_for('show_url', id=new_id))
 
     except Exception as e:
-        logger.error(f"Database error: {str(e)}")
-        flash('Ошибка базы данных', 'danger')
+        logger.error(f"Ошибка: {str(e)}")
+        flash('Ошибка при обработке запроса', 'danger')
         return redirect(url_for('index'))
 
 
