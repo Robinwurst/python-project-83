@@ -163,17 +163,26 @@ def index():
 def add_url():
     raw_url = request.form.get('url', '').strip()
 
+    # Проверка пустого URL
     if not raw_url:
         flash('URL обязателен', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400
 
+    # Проверка длины URL
     if len(raw_url) > 255:
         flash('URL превышает 255 символов', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400
 
-    if not is_valid_url(raw_url):
+    # Проверка валидности URL
+    try:
+        parsed = urlparse(raw_url)
+        if not all([parsed.scheme, parsed.netloc]):
+            raise ValueError
+        if parsed.scheme not in ['http', 'https']:
+            raise ValueError
+    except ValueError:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400
 
     try:
         normalized_url = normalize_url(raw_url)
