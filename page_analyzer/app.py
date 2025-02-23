@@ -1,12 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
-from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
 from page_analyzer.database import db
 import requests
 from bs4 import BeautifulSoup
-
+from urllib.parse import urlparse
 
 load_dotenv()
 
@@ -15,13 +14,8 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.jinja_env.filters['truncate'] = lambda s, length: (s[:length-3] + '...') if s and len(s) > length else s
 
 def get_db_connection():
-
     db_url = os.getenv('DATABASE_URL')
-
-
     parsed_url = urlparse(db_url)
-
-
     conn_params = {
         'dbname': parsed_url.path[1:],
         'user': parsed_url.username,
@@ -29,16 +23,11 @@ def get_db_connection():
         'host': parsed_url.hostname,
         'port': parsed_url.port,
     }
-
-    conn = psycopg2.connect(**conn_params)
-    return conn
-
-
+    return psycopg2.connect(**conn_params)
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/add_url', methods=['POST'])
 def add_url():
@@ -62,8 +51,11 @@ def add_url():
             flash('Страница успешно добавлена', 'success')
             return redirect(url_for('show_url', id=url_id[0]))
         else:
+            # Если URL уже существует, находим его ID
+            cur.execute("SELECT id FROM urls WHERE name = %s", (url,))
+            existing_url_id = cur.fetchone()[0]
             flash('Страница уже существует', 'info')
-            return redirect(url_for('show_url', id=cur.execute("SELECT id FROM urls WHERE name = %s", (url,)).fetchone()[0]))
+            return redirect(url_for('show_url', id=existing_url_id))
     except Exception as e:
         conn.rollback()
         flash('Ошибка при добавлении URL', 'danger')
@@ -72,7 +64,6 @@ def add_url():
         cur.close()
         conn.close()
     return redirect(url_for('index'))
-
 
 @app.get('/urls/<int:id>')
 def show_url(id):
@@ -84,16 +75,15 @@ def show_url(id):
     checks = db.get_url_checks(id)
     return render_template('url.html', url=url, checks=checks)
 
-
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
-    url = db.get_url_by_id(id)
-    if not url:
+    url_data = db.get_url_by_id(id)
+    if not url_data:
         flash('Сайт не найден', 'danger')
         return redirect(url_for('show_urls'))
 
     try:
-        response = requests.get(url.name, timeout=5)
+        response = requests.get(url_data['name'], timeout=5)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -116,8 +106,6 @@ def check_url(id):
         flash('Непредвиденная ошибка', 'danger')
         app.logger.error(f"Ошибка проверки: {str(e)}")
     return redirect(url_for('show_url', id=id))
-
-
 
 @app.get('/urls')
 def show_urls():
