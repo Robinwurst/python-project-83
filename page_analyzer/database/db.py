@@ -58,8 +58,8 @@ def get_urls():
                     u.id, 
                     u.name, 
                     u.created_at, 
-                    MAX(uc.created_at),
-                    MAX(uc.status_code)
+                    MAX(uc.created_at) as last_check,
+                    MAX(uc.status_code) as last_status
                 FROM urls u
                 LEFT JOIN url_checks uc ON u.id = uc.url_id
                 GROUP BY u.id

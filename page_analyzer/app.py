@@ -39,29 +39,31 @@ def get_db_connection():
 def index():
     return render_template('index.html')
 
+
 @app.route('/add_url', methods=['POST'])
 def add_url():
     url = request.form['url']
-    if not url or len(url) > 255:
-        flash('Некорректный URL', 'error')
-        return redirect(url_for('index'))
+    # ... валидация URL ...
 
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO urls (name) VALUES (%s) ON CONFLICT (name) DO NOTHING RETURNING id", (url,))
-        url_id = cur.fetchone()
+        cur.execute("""
+            INSERT INTO urls (name) 
+            VALUES (%s) 
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name 
+            RETURNING id
+        """, (url,))
+        url_id = cur.fetchone()[0]
         conn.commit()
-        if url_id:
-            flash('Страница успешно добавлена', 'success')
-        else:
-            flash('Страница уже существует', 'info')
+        flash('Страница успешно добавлена', 'success')
+        return redirect(url_for('show_url', id=url_id))
     except Exception as e:
+        conn.rollback()
         flash('Ошибка при добавлении URL', 'error')
     finally:
         cur.close()
         conn.close()
-
     return redirect(url_for('index'))
 
 
