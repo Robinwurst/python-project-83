@@ -141,7 +141,10 @@ app.jinja_env.filters['truncate'] = lambda s, length: (s[:length - 3] + '...') i
 
 def normalize_url(url):
     parsed = urlparse(url)
-    return f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}"
+    scheme = parsed.scheme.lower()
+    netloc = parsed.netloc.lower()
+    path = parsed.path.rstrip('/')
+    return f"{scheme}://{netloc}{path}" if path else f"{scheme}://{netloc}"
 
 
 def is_valid_url(url):
@@ -160,9 +163,21 @@ def index():
 @app.route('/add_url', methods=['POST'])
 def add_url():
     raw_url = request.form.get('url', '').strip()
-    if not raw_url or len(raw_url) > 255 or not is_valid_url(raw_url):
+
+    # Проверка на пустой URL
+    if not raw_url:
+        flash('URL обязателен', 'danger')
+        return redirect(url_for('index')), 400
+
+    # Проверка длины
+    if len(raw_url) > 255:
+        flash('URL превышает 255 символов', 'danger')
+        return redirect(url_for('index')), 400
+
+    # Проверка валидности
+    if not is_valid_url(raw_url):
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400  # Явный возврат 400
 
     url = normalize_url(raw_url)
 
