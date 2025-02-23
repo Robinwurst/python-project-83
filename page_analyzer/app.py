@@ -163,31 +163,28 @@ def index():
 def add_url():
     raw_url = request.form.get('url', '').strip()
 
-    # Проверка пустого URL
+    # Валидация URL
     if not raw_url:
         flash('URL обязателен', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400  # 400 Bad Request
 
-    # Проверка длины URL
     if len(raw_url) > 255:
         flash('URL превышает 255 символов', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400
 
-    # Проверка валидности URL
     try:
         parsed = urlparse(raw_url)
-        if not all([parsed.scheme, parsed.netloc]):
-            raise ValueError
-        if parsed.scheme not in ['http', 'https']:
+        if not all([parsed.scheme, parsed.netloc]) or parsed.scheme not in ['http', 'https']:
             raise ValueError
     except ValueError:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('index')), 400
+
+    # Нормализация и проверка дубликатов
+    normalized_url = normalize_url(raw_url)
 
     try:
-        normalized_url = normalize_url(raw_url)
         existing_id = db.get_url_id_by_name(normalized_url)
-
         if existing_id:
             flash('Страница уже существует', 'info')
             return redirect(url_for('show_url', id=existing_id))
@@ -197,7 +194,7 @@ def add_url():
         return redirect(url_for('show_url', id=new_id))
 
     except Exception as e:
-        logger.error(f"Ошибка: {str(e)}")
+        logger.error(f"Ошибка базы данных: {str(e)}")
         flash('Ошибка при обработке запроса', 'danger')
         return redirect(url_for('index'))
 
