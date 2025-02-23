@@ -166,11 +166,11 @@ def add_url():
     # Валидация URL
     if not raw_url:
         flash('URL обязателен', 'danger')
-        return redirect(url_for('index')), 400  # 400 Bad Request
+        return render_template('index.html'), 400
 
     if len(raw_url) > 255:
         flash('URL превышает 255 символов', 'danger')
-        return redirect(url_for('index')), 400
+        return render_template('index.html'), 400
 
     try:
         parsed = urlparse(raw_url)
@@ -178,7 +178,7 @@ def add_url():
             raise ValueError
     except ValueError:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('index')), 400
+        return render_template('index.html'), 400
 
     # Нормализация и проверка дубликатов
     normalized_url = normalize_url(raw_url)
@@ -196,7 +196,7 @@ def add_url():
     except Exception as e:
         logger.error(f"Ошибка базы данных: {str(e)}")
         flash('Ошибка при обработке запроса', 'danger')
-        return redirect(url_for('index'))
+        return render_template('index.html'), 500
 
 
 @app.get('/urls/<int:id>')
