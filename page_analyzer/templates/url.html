@@ -1,23 +1,23 @@
-<table class="table table-bordered" data-test="checks">
+<table class="table table-bordered table-hover" data-test="checks">
     <thead>
         <tr>
             <th>ID</th>
+            <th>Дата проверки</th>
             <th>Код ответа</th>
             <th>h1</th>
             <th>title</th>
             <th>description</th>
-            <th>Дата проверки</th>
         </tr>
     </thead>
     <tbody>
         {% for check in checks %}
         <tr>
-            <td>{{ check[0] }}</td>
-            <td>{{ check[2] }}</td>
-            <td>{{ check[3]|default('', true) }}</td>
-            <td>{{ check[4]|default('', true) }}</td>
-            <td>{{ check[5]|default('', true) }}</td>
-            <td>{{ check[6].strftime('%Y-%m-%d') }}</td>
+            <td>{{ check.id }}</td>
+            <td>{{ check.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>{{ check.status_code }}</td>
+            <td>{{ check.h1|default('', true)|truncate(50) }}</td>
+            <td>{{ check.title|default('', true)|truncate(50) }}</td>
+            <td>{{ check.description|default('', true)|truncate(200) }}</td>
         </tr>
         {% endfor %}
     </tbody>

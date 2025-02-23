@@ -12,7 +12,7 @@ load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
+app.jinja_env.filters['truncate'] = lambda s, length: (s[:length-3] + '...') if s and len(s) > length else s
 
 def get_db_connection():
 
