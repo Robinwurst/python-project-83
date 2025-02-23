@@ -81,9 +81,7 @@ def show_url(id):
         flash('Сайт не найден', 'danger')
         return redirect(url_for('show_urls'))
 
-
     checks = db.get_url_checks(id)
-
     return render_template('url.html', url=url, checks=checks)
 
 
