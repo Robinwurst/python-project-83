@@ -86,23 +86,29 @@ def check_url(id):
         return redirect(url_for('show_urls'))
 
     try:
-        # Выполняем HTTP-запрос
         response = requests.get(url_data[1], timeout=5)
         response.raise_for_status()
 
-        # Извлекаем статус код
-        status_code = response.status_code
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Создаем проверку с данными
+
+        h1 = soup.h1.text.strip() if soup.h1 else None
+        title = soup.title.text.strip() if soup.title else None
+        description_tag = soup.find('meta', attrs={'name': 'description'})
+        description = description_tag['content'].strip() if description_tag else None
+
         db.create_url_check({
             'url_id': id,
-            'status_code': status_code
+            'status_code': response.status_code,
+            'h1': h1,
+            'title': title,
+            'description': description
         })
         flash('Страница успешно проверена', 'success')
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке', 'danger')
     except Exception as e:
-        flash('Произошла непредвиденная ошибка', 'danger')
+        flash('Непредвиденная ошибка', 'danger')
 
     return redirect(url_for('show_url', id=id))
 
@@ -110,5 +116,5 @@ def check_url(id):
 
 @app.get('/urls')
 def show_urls():
-    urls = db.get_urls()  # Используем новую функцию из db.py
+    urls = db.get_urls()
     return render_template('urls.html', urls=urls)
