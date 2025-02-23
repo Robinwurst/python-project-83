@@ -11,7 +11,8 @@ load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.jinja_env.filters['truncate'] = lambda s, length: (s[:length-3] + '...') if s and len(s) > length else s
+app.jinja_env.filters['truncate'] = lambda s, length: (s[:length - 3] + '...') if s and len(s) > length else s
+
 
 def get_db_connection():
     db_url = os.getenv('DATABASE_URL')
@@ -25,9 +26,11 @@ def get_db_connection():
     }
     return psycopg2.connect(**conn_params)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/add_url', methods=['POST'])
 def add_url():
@@ -40,9 +43,9 @@ def add_url():
     cur = conn.cursor()
     try:
         cur.execute("""
-            INSERT INTO urls (name) 
-            VALUES (%s) 
-            ON CONFLICT (name) DO NOTHING 
+            INSERT INTO urls (name)
+            VALUES (%s)
+            ON CONFLICT (name) DO NOTHING
             RETURNING id
         """, (url,))
         url_id = cur.fetchone()
@@ -65,6 +68,7 @@ def add_url():
         conn.close()
     return redirect(url_for('index'))
 
+
 @app.get('/urls/<int:id>')
 def show_url(id):
     url = db.get_url_by_id(id)
@@ -74,6 +78,7 @@ def show_url(id):
 
     checks = db.get_url_checks(id)
     return render_template('url.html', url=url, checks=checks)
+
 
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
@@ -106,6 +111,7 @@ def check_url(id):
         flash('Непредвиденная ошибка', 'danger')
         app.logger.error(f"Ошибка проверки: {str(e)}")
     return redirect(url_for('show_url', id=id))
+
 
 @app.get('/urls')
 def show_urls():
