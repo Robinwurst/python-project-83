@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 
-{% block content %}
-    <h1>Анализатор страниц</h1>
+{% block title %}Анализатор страниц{% endblock %}
 
-    <!-- Форма для ввода URL -->
-    <form action="{{ url_for('add_url') }}" method="post">
-        <div class="mb-3">
-            <label for="url" class="form-label">Введите URL:</label>
-            <input type="text" class="form-control" id="url" name="url" placeholder="https://example.com" required>
+{% block content %}
+    <div class="container-lg mt-3">
+        <div class="row">
+            <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 bg-light p-5">
+                <h1 class="display-3">Анализатор страниц</h1>
+                <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
+                <form action="{{ url_for('add_url') }}" method="post" class="d-flex justify-content-center">
+                    <label for="url" class="visually-hidden">URL для проверки</label>
+                    <input type="text" name="url" id="url" placeholder="https://www.example.com" class="form-control form-control-lg" required>
+                    <input type="submit" class="btn btn-primary btn-lg ms-3 px-5 text-uppercase mx-3" value="Проверить">
+                </form>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Проверить</button>
-    </form>
+    </div>
 {% endblock %}
