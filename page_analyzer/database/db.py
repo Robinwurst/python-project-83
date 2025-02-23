@@ -8,11 +8,15 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def get_url_by_id(url_id):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM urls WHERE id = %s",
-                (url_id,)
-            )
-            return cursor.fetchone()
+            cursor.execute("SELECT * FROM urls WHERE id = %s", (url_id,))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'id': row[0],
+                    'name': row[1],
+                    'created_at': row[2]
+                }
+            return None
 
 
 def create_url_check(data):
@@ -36,18 +40,19 @@ def get_url_checks(url_id):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT 
-                    id, 
-                    created_at, 
-                    status_code, 
-                    h1, 
-                    title, 
-                    description
+                SELECT id, created_at, status_code, h1, title, description
                 FROM url_checks 
                 WHERE url_id = %s 
                 ORDER BY created_at DESC
             """, (url_id,))
-            return [dict(id=row[0], created_at=row[1], status_code=row[2], h1=row[3], title=row[4], description=row[5]) for row in cursor.fetchall()]
+            return [{
+                'id': row[0],
+                'created_at': row[1],
+                'status_code': row[2],
+                'h1': row[3],
+                'title': row[4],
+                'description': row[5]
+            } for row in cursor.fetchall()]
 
 
 def get_urls():
