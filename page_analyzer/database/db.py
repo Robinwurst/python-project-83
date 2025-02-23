@@ -18,7 +18,6 @@ def get_url_by_id(url_id):
                 }
             return None
 
-
 def create_url_check(data):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cursor:
@@ -53,7 +52,6 @@ def get_url_checks(url_id):
                 'title': row[4],
                 'description': row[5]
             } for row in cursor.fetchall()]
-
 
 def get_urls():
     with psycopg2.connect(DATABASE_URL) as conn:
