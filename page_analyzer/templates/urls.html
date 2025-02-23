@@ -1,24 +1,28 @@
-<table class="table table-bordered table-hover" data-test="urls">
-    <thead class="table-light">
-        <tr>
-            <th>ID</th>
-            <th>Имя сайта</th>
-            <th>Последняя проверка</th>
-            <th>Код ответа</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for url in urls %}
+{% extends "base.html" %}
+
+{% block content %}
+    <table class="table table-bordered table-hover" data-test="urls">
+        <thead class="table-light">
             <tr>
-                <td>{{ url.id }}</td>
-                <td><a href="{{ url_for('show_url', id=url.id) }}">{{ url.name }}</a></td>
-                <td>{{ url.last_check.strftime('%Y-%m-%d') if url.last_check else '' }}</td>
-                <td>{{ url.last_status if url.last_status else '' }}</td>
+                <th>ID</th>
+                <th>Имя сайта</th>
+                <th>Последняя проверка</th>
+                <th>Код ответа</th>
             </tr>
-        {% else %}
-            <tr>
-                <td colspan="4" class="text-center">Нет добавленных сайтов</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for url in urls %}
+                <tr>
+                    <td>{{ url.id }}</td>
+                    <td><a href="{{ url_for('show_url', id=url.id) }}">{{ url.name }}</a></td>
+                    <td>{{ url.last_check.strftime('%Y-%m-%d') if url.last_check else '' }}</td>
+                    <td>{{ url.last_status if url.last_status else '' }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">Нет добавленных сайтов</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

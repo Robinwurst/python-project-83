@@ -1,58 +1,53 @@
-<h1>Информация о сайте</h1>
-<table class="table table-bordered" data-test="url">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Имя сайта</th>
-            <th>Дата создания</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ url.id }}</td>
-            <td>{{ url.name }}</td>
-            <td>{{ url.created_at.strftime('%Y-%m-%d') }}</td>
-        </tr>
-    </tbody>
-</table>
+{% extends "base.html" %}
 
-<form method="post" action="{{ url_for('check_url', id=url.id) }}">
-    <button type="submit" class="btn btn-primary">Запустить проверку</button>
-</form>
+{% block content %}
+    <h1>Информация о сайте</h1>
+    <table class="table table-bordered" data-test="url">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Имя сайта</th>
+                <th>Дата создания</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ url.id }}</td>
+                <td>{{ url.name }}</td>
+                <td>{{ url.created_at.strftime('%Y-%m-%d') }}</td>
+            </tr>
+        </tbody>
+    </table>
 
-<h2 class="mt-5">Проверки</h2>
-<table class="table table-bordered" data-test="checks">
-    <thead>
-        <tr>
-            <th>Дата проверки</th>
-            <th>Код ответа</th>
-            <th>h1</th>
-            <th>title</th>
-            <th>description</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for check in checks %}
+    <form method="post" action="{{ url_for('check_url', id=url.id) }}">
+        <button type="submit" class="btn btn-primary">Запустить проверку</button>
+    </form>
+
+    <h2 class="mt-5">Проверки</h2>
+    <table class="table table-bordered" data-test="checks">
+        <thead>
             <tr>
-                <td>{{ check.created_at.strftime('%Y-%m-%d') }}</td>
-                <td>{{ check.status_code }}</td>
-                <td>{{ check.h1|default('') }}</td>
-                <td>{{ check.title|default('') }}</td>
-                <td>{{ check.description|default('') }}</td>
+                <th>Дата проверки</th>
+                <th>Код ответа</th>
+                <th>h1</th>
+                <th>title</th>
+                <th>description</th>
             </tr>
-        {% else %}
-            <tr>
-                <td colspan="5" class="text-center">Нет проверок</td>
-            </tr>
-        {% endfor %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} mt-3">
-                    {{ message }}
-                </div>
+        </thead>
+        <tbody>
+            {% for check in checks %}
+                <tr>
+                    <td>{{ check.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ check.status_code }}</td>
+                    <td>{{ check.h1|default('') }}</td>
+                    <td>{{ check.title|default('') }}</td>
+                    <td>{{ check.description|default('') }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">Нет проверок</td>
+                </tr>
             {% endfor %}
-        {% endif %}
-    {% endwith %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+{% endblock %}
