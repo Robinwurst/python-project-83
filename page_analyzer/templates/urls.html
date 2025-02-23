@@ -10,10 +10,10 @@
     <tbody>
         {% for url in urls %}
             <tr>
-                <td>{{ url.id }}</td>
-                <td><a href="{{ url_for('show_url', id=url.id) }}">{{ url.name }}</a></td>
-                <td>{{ url.last_check.strftime('%Y-%m-%d') if url.last_check }}</td>
-                <td>{{ url.last_status if url.last_status }}</td>
+                <td>{{ url[0] }}</td> <!-- ID -->
+                <td><a href="{{ url_for('show_url', id=url[0]) }}">{{ url[1] }}</a></td> <!-- Имя сайта -->
+                <td>{{ url[3].strftime('%Y-%m-%d') if url[3] }}</td> <!-- Последняя проверка -->
+                <td>{{ url[4] if url[4] }}</td> <!-- Код ответа -->
             </tr>
         {% else %}
             <tr>

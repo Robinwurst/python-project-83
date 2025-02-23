@@ -70,4 +70,10 @@ def get_urls():
                 GROUP BY u.id
                 ORDER BY u.id DESC
             """)
-            return [dict(id=row[0], name=row[1], created_at=row[2], last_check=row[3], last_status=row[4]) for row in cursor.fetchall()]
+            return [{
+                'id': row[0],
+                'name': row[1],
+                'created_at': row[2],
+                'last_check': row[3],
+                'last_status': row[4]
+            } for row in cursor.fetchall()]
