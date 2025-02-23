@@ -3,11 +3,11 @@ import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
-from database import db
+from page_analyzer.database import db
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
