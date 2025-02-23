@@ -20,7 +20,7 @@ def create_url_check(data):
         with conn.cursor() as cursor:
             cursor.execute(
                 "INSERT INTO url_checks (url_id, created_at) VALUES (%s, NOW()) RETURNING id",
-                (data['url_id'],)
+                (data['url_id'],))
             check_id = cursor.fetchone()[0]
             conn.commit()
             return check_id
