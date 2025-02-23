@@ -1,33 +1,18 @@
-<!-- url.html -->
-<div class="container mt-5">
-    <h1>Информация о сайте</h1>
-    <table class="table" data-test="url">
-
-    </table>
-
-
-    <form method="post" action="{{ url_for('check_url', id=url[0]) }}">
-        <button type="submit" class="btn btn-primary">Запустить проверку</button>
-    </form>
-
-
-    <h2 class="mt-5">Проверки</h2>
-    <table class="table table-bordered" data-test="checks">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Код ответа</th>
-                <th>Дата создания</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for check in checks %}
-            <tr>
-                <td>{{ check[0] }}</td>
-                <td>{{ check[2] if check[2] }}</td>
-                <td>{{ check[5] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<table class="table table-bordered" data-test="checks">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Код ответа</th>
+            <th>Дата создания</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for check in checks %}
+        <tr>
+            <td>{{ check[0] }}</td>
+            <td>{{ check[2] }}</td>
+            <td>{{ check[5].strftime('%Y-%m-%d') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

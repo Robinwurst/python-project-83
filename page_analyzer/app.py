@@ -4,6 +4,9 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
 from page_analyzer.database import db
+import requests
+from bs4 import BeautifulSoup
+
 
 load_dotenv()
 
@@ -75,23 +78,31 @@ def show_url(id):
     return render_template('url.html', url=url, checks=checks)
 
 
-
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
-    url = db.get_url_by_id(id)
-    if not url:
+    url_data = db.get_url_by_id(id)
+    if not url_data:
         flash('Сайт не найден', 'danger')
         return redirect(url_for('show_urls'))
 
     try:
-        # Пока создаем "пустую" проверку (остальные поля будут на след. шаге)
+        # Выполняем HTTP-запрос
+        response = requests.get(url_data[1], timeout=5)
+        response.raise_for_status()
+
+        # Извлекаем статус код
+        status_code = response.status_code
+
+        # Создаем проверку с данными
         db.create_url_check({
             'url_id': id,
-            # status_code, h1 и др. пока NULL
+            'status_code': status_code
         })
         flash('Страница успешно проверена', 'success')
+    except requests.exceptions.RequestException as e:
+        flash('Произошла ошибка при проверке', 'danger')
     except Exception as e:
-        flash('Ошибка при проверке', 'danger')
+        flash('Произошла непредвиденная ошибка', 'danger')
 
     return redirect(url_for('show_url', id=id))
 

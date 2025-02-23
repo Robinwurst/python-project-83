@@ -10,5 +10,7 @@ dependencies = [
     "flask",
     "gunicorn",
     "python-dotenv",
-    "psycopg2-binary"
+    "psycopg2-binary",
+    "requests",
+    "bs4"
 ]
