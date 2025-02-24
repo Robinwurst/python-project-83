@@ -127,6 +127,7 @@ from urllib.parse import urlparse
 import logging
 import requests
 from bs4 import BeautifulSoup
+
 from page_analyzer.database import db
 
 load_dotenv()
@@ -159,7 +160,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/add_url', methods=['POST'])
+@app.post('/urls')
 def add_url():
     raw_url = request.form.get('url', '').strip()
 
