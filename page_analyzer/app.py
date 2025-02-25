@@ -137,7 +137,13 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.jinja_env.filters['truncate'] = lambda s, length: (s[:length - 3] + '...') if s and len(s) > length else s
+
+
+def truncate_filter(s, length):
+    return (s[:length - 3] + '...') if s and len(s) > length else s
+
+
+app.jinja_env.filters['truncate'] = truncate_filter
 
 
 def normalize_url(url):
@@ -175,7 +181,8 @@ def add_url():
 
     try:
         parsed = urlparse(raw_url)
-        if not all([parsed.scheme, parsed.netloc]) or parsed.scheme not in ['http', 'https']:
+        if (not all([parsed.scheme, parsed.netloc])
+                or parsed.scheme not in ['http', 'https']):
             raise ValueError
     except ValueError:
         flash('Некорректный URL', 'danger')
@@ -232,7 +239,11 @@ def check_url(id):
         h1 = soup.h1.text.strip() if soup.h1 else None
         title = soup.title.text.strip() if soup.title else None
         description_tag = soup.find('meta', attrs={'name': 'description'})
-        description = description_tag['content'].strip() if description_tag else None
+        description = (
+            description_tag['content'].strip()
+            if description_tag
+            else None
+        )
 
         db.insert_url_check({
             'url_id': id,
