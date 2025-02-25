@@ -10,5 +10,19 @@
 
 ## Установка
 1. Клонируйте репозиторий:
-   ```bash
-   git clone https://github.com/ваш-логин/python-project-83.git
+```bash
+git clone https://github.com/ваш-логин/python-project-83.git
+
+cd page_analyzer
+
+make build
+make start
+```
+
+## Переменные окружения необходимые для работы сервиса:
+
+- SECRET_KEY - обязателен для работы приложения.
+- DATABASE_URL - путь к вашей базе данных в виде унифицированного идентификатора ресурса (URI): 'postgresql://user:password@host:port/database_name'.
+
+
+
