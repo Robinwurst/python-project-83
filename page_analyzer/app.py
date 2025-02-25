@@ -11,7 +11,8 @@
 #
 # app = Flask(__name__, template_folder="templates")
 # app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-# app.jinja_env.filters['truncate'] = lambda s, length: (s[:length - 3] + '...') if s and len(s) > length else s
+# app.jinja_env.filters['truncate'] = lambda s, length: (
+# s[:length - 3] + '...') if s and len(s) > length else s
 #
 #
 # def get_db_connection():
@@ -95,7 +96,8 @@
 #         h1 = soup.h1.text.strip() if soup.h1 else None
 #         title = soup.title.text.strip() if soup.title else None
 #         description_tag = soup.find('meta', attrs={'name': 'description'})
-#         description = description_tag['content'].strip() if description_tag else None
+#         description = description_tag['content'].strip()
+#         if description_tag else None
 #
 #         db.create_url_check({
 #             'url_id': id,
