@@ -167,11 +167,11 @@ def add_url():
     # Валидация URL
     if not raw_url:
         flash('URL обязателен', 'danger')
-        return render_template('index.html'), 422
+        return render_template('index.html'), 400
 
     if len(raw_url) > 255:
         flash('URL превышает 255 символов', 'danger')
-        return render_template('index.html'), 422
+        return render_template('index.html'), 400
 
     try:
         parsed = urlparse(raw_url)
