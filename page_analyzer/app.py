@@ -17,26 +17,9 @@ app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
-def truncate_filter(s, length):
-    return (s[:length - 3] + '...') if s and len(s) > length else s
-
-
-app.jinja_env.filters['truncate'] = truncate_filter
-
-
 def normalize_url(url):
     parsed = urlparse(url)
     return f"{parsed.scheme}://{parsed.netloc}".lower().rstrip('/')
-
-
-def is_valid_url(url):
-    try:
-        result = urlparse(url)
-        if not all([result.scheme, result.netloc]):
-            return False
-        return result.scheme in ['http', 'https']
-    except ValueError:
-        return False
 
 
 @app.route('/')
