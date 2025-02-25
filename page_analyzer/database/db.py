@@ -86,6 +86,7 @@ from urllib.parse import urlparse
 
 load_dotenv()
 
+
 def get_connection():
     db_url = os.getenv('DATABASE_URL')
     parsed_url = urlparse(db_url)
@@ -98,12 +99,14 @@ def get_connection():
     }
     return psycopg2.connect(**conn_params)
 
+
 def get_url_id_by_name(url):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT id FROM urls WHERE name = %s", (url,))
             result = cur.fetchone()
             return result[0] if result else None
+
 
 def insert_url(url):
     with get_connection() as conn:
@@ -116,6 +119,7 @@ def insert_url(url):
             conn.commit()
             return new_id
 
+
 def get_url_by_id(url_id):
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -127,12 +131,13 @@ def get_url_by_id(url_id):
                 'created_at': result[2]
             } if result else None
 
+
 def insert_url_check(check_data):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO url_checks (
-                    url_id, 
+                    url_id,
                     status_code,
                     h1,
                     title,
@@ -147,6 +152,7 @@ def insert_url_check(check_data):
                 check_data.get('description')
             ))
             conn.commit()
+
 
 def get_url_checks(url_id):
     with get_connection() as conn:
@@ -166,11 +172,12 @@ def get_url_checks(url_id):
                 'created_at': row[5]
             } for row in cur.fetchall()]
 
+
 def get_all_urls_with_checks():
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT 
+                SELECT
                     u.id,
                     u.name,
                     MAX(uc.created_at) AS last_check_date,
