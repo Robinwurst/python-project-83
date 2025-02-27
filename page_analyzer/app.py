@@ -2,9 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
 from logger import logger
-import requests
-from bs4 import BeautifulSoup
-from utils import normalize_url, is_valid_url
+from utils import normalize_url, is_valid_url, get_page_data
 from page_analyzer.database import db
 
 load_dotenv()
@@ -74,31 +72,21 @@ def check_url(id):
             flash('Сайт не найден', 'danger')
             return redirect(url_for('show_urls'))
 
-        response = requests.get(url_data['name'], timeout=5)
-        response.raise_for_status()
+        # Получаем данные со страницы
+        page_data = get_page_data(url_data['name'])
+        if page_data:
+            # Сохраняем данные в БД
+            db.insert_url_check({
+                'url_id': id,
+                'status_code': page_data['status_code'],
+                'h1': page_data['h1'],
+                'title': page_data['title'],
+                'description': page_data['description']
+            })
+            flash('Страница успешно проверена', 'success')
+        else:
+            flash('Произошла ошибка при проверке', 'danger')
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        h1 = soup.h1.text.strip() if soup.h1 else None
-        title = soup.title.text.strip() if soup.title else None
-        description_tag = soup.find('meta', attrs={'name': 'description'})
-        description = (
-            description_tag['content'].strip()
-            if description_tag
-            else None
-        )
-
-        db.insert_url_check({
-            'url_id': id,
-            'status_code': response.status_code,
-            'h1': h1,
-            'title': title,
-            'description': description
-        })
-        flash('Страница успешно проверена', 'success')
-
-    except requests.RequestException as e:
-        logger.error(f"Request error: {str(e)}")
-        flash('Произошла ошибка при проверке', 'danger')
     except Exception as e:
         logger.error(f"General error: {str(e)}")
         flash('Непредвиденная ошибка', 'danger')
