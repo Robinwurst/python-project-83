@@ -2,24 +2,20 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-import logging
+from logger import logger
 import requests
 from bs4 import BeautifulSoup
-
+from utils import normalize_url, is_valid_url
 from page_analyzer.database import db
 
 load_dotenv()
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
-def normalize_url(url):
-    parsed = urlparse(url)
-    return f"{parsed.scheme}://{parsed.netloc}".lower().rstrip('/')
+
 
 
 @app.route('/')
@@ -40,14 +36,13 @@ def add_url():
         flash('URL превышает 255 символов', 'danger')
         return render_template('index.html'), 400
 
-    try:
-        parsed = urlparse(raw_url)
-        if (not all([parsed.scheme, parsed.netloc])
-                or parsed.scheme not in ['http', 'https']):
-            raise ValueError
-    except ValueError:
+    parsed = urlparse(raw_url)
+    if not is_valid_url(raw_url):
         flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
+
+
+
 
     # Нормализация и проверка дубликатов
     normalized_url = normalize_url(raw_url)
@@ -81,7 +76,7 @@ def show_url(id):
 
     except Exception as e:
         logger.error(f"Database error: {str(e)}")
-        flash('Ошибка базы данных', 'danger')
+        flash('Непредвиденная ошибка', 'danger')
         return redirect(url_for('index'))
 
 
