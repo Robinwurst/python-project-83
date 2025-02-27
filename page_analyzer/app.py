@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
 from .logger import logger
-from utils import normalize_url, is_valid_url, get_page_data
+from .utils import normalize_url, is_valid_url, get_page_data
 from page_analyzer.database import db
 
 load_dotenv()
