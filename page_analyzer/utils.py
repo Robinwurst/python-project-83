@@ -9,6 +9,7 @@ def normalize_url(url):
 
 
 def is_valid_url(url):
+    status_code = None
     errors = {}
 
     if not url:
