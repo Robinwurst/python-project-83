@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from dotenv import load_dotenv
-from urllib.parse import urlparse
 from logger import logger
 import requests
 from bs4 import BeautifulSoup
@@ -15,9 +14,6 @@ app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
-
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -28,21 +24,11 @@ def add_url():
     raw_url = request.form.get('url', '').strip()
 
     # Валидация URL
-    if not raw_url:
-        flash('URL обязателен', 'danger')
-        return render_template('index.html'), 400
-
-    if len(raw_url) > 255:
-        flash('URL превышает 255 символов', 'danger')
-        return render_template('index.html'), 400
-
-    parsed = urlparse(raw_url)
-    if not is_valid_url(raw_url):
-        flash('Некорректный URL', 'danger')
-        return render_template('index.html'), 422
-
-
-
+    validation_errors, status_code = is_valid_url(raw_url)
+    if validation_errors:
+        for field, message in validation_errors.items():
+            flash(message, 'danger')
+        return render_template('index.html'), status_code
 
     # Нормализация и проверка дубликатов
     normalized_url = normalize_url(raw_url)
