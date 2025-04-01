@@ -5,8 +5,11 @@ from .messages import URL_REQUIRED, URL_TOO_LONG, URL_INVALID
 
 
 def normalize_url(url):
+    url = url.strip().lower()
+    if not url.startswith(('http://', 'https://')):
+        url = 'http://' + url
     parsed = urlparse(url)
-    return f"{parsed.scheme}://{parsed.netloc}".lower().rstrip('/')
+    return f"{parsed.scheme}://{parsed.netloc}"
 
 
 def validate_url(url):

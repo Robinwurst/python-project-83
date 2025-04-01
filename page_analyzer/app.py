@@ -54,14 +54,15 @@ def add_url():
         existing_id = get_url_id_by_name(conn, normalized_url)
         if existing_id:
             flash(PAGE_EXISTS, ALERT_INFO)
-            return redirect(url_for('show_url', id=existing_id))
+            return render_template('index.html'), 200
 
         new_id = insert_url(conn, normalized_url)
         flash(PAGE_ADDED, ALERT_SUCCESS)
-        return redirect(url_for('show_url', id=new_id))
+        return render_template('index.html'), 200
 
     except Exception as e:
-        logger.error(f"Database error: {str(e)}")
+        conn.rollback()
+        logger.error(f"Ошибка базы данных: {str(e)}")
         flash(DB_ERROR, ALERT_DANGER)
         return render_template('index.html'), 500
     finally:
@@ -110,14 +111,16 @@ def check_url(id):
         else:
             flash(CHECK_FAILED, ALERT_DANGER)
 
+        checks = get_url_checks(conn, id)
+        return render_template('url.html', url=url_data, checks=checks)
+
     except Exception as e:
         conn.rollback()
         logger.error(f"General error: {str(e)}")
         flash(UNEXPECTED_ERROR, ALERT_DANGER)
+        return redirect(url_for('show_url', id=id))
     finally:
         conn.close()
-
-    return redirect(url_for('show_url', id=id))
 
 
 @app.get('/urls')
