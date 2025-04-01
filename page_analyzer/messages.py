@@ -1,4 +1,3 @@
-
 URL_REQUIRED = "URL обязателен"
 URL_TOO_LONG = "URL превышает 255 символов"
 URL_INVALID = "Некорректный URL"

@@ -9,7 +9,8 @@ def normalize_url(url):
     if not url.startswith(('http://', 'https://')):
         url = 'http://' + url
     parsed = urlparse(url)
-    return f"{parsed.scheme}://{parsed.netloc}"
+    netloc = parsed.netloc.split(':')[0].split('/')[0]
+    return f"{parsed.scheme}://{netloc}"
 
 
 def validate_url(url):

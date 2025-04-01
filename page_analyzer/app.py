@@ -54,11 +54,12 @@ def add_url():
         existing_id = get_url_id_by_name(conn, normalized_url)
         if existing_id:
             flash(PAGE_EXISTS, ALERT_INFO)
-            return render_template('index.html'), 200
+            return redirect(url_for('show_url', id=existing_id))
 
         new_id = insert_url(conn, normalized_url)
+        conn.commit()
         flash(PAGE_ADDED, ALERT_SUCCESS)
-        return render_template('index.html'), 200
+        return redirect(url_for('show_url', id=new_id))
 
     except Exception as e:
         conn.rollback()
@@ -107,12 +108,12 @@ def check_url(id):
                 'title': page_data['title'],
                 'description': page_data['description']
             })
+            conn.commit()
             flash(CHECK_SUCCESS, ALERT_SUCCESS)
         else:
             flash(CHECK_FAILED, ALERT_DANGER)
 
-        checks = get_url_checks(conn, id)
-        return render_template('url.html', url=url_data, checks=checks)
+        return redirect(url_for('show_url', id=id))
 
     except Exception as e:
         conn.rollback()
