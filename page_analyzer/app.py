@@ -45,10 +45,9 @@ def add_url():
     try:
         raw_url = request.form.get('url', '').strip()
 
-        validation_errors, status_code = validate_url(raw_url)
-        if validation_errors:
-            for field, message in validation_errors.items():
-                flash(message, ALERT_DANGER)
+        error_message, status_code = validate_url(raw_url)
+        if error_message:
+            flash(error_message, ALERT_DANGER)
             return render_template('index.html'), status_code
 
         normalized_url = normalize_url(raw_url)
@@ -62,8 +61,7 @@ def add_url():
         return redirect(url_for('show_url', id=new_id))
 
     except Exception as e:
-        conn.rollback()
-        logger.error(f"Ошибка базы данных: {str(e)}")
+        logger.error(f"Database error: {str(e)}")
         flash(DB_ERROR, ALERT_DANGER)
         return render_template('index.html'), 500
     finally:

@@ -10,14 +10,17 @@ def normalize_url(url):
 
 
 def validate_url(url):
-    if url is None or url.strip() == "":
+    if not url or not url.strip():
         return URL_REQUIRED, 400
+
     if len(url) > 255:
         return URL_TOO_LONG, 400
 
     try:
         parsed = urlparse(url)
-        if not all([parsed.scheme, parsed.netloc]) or parsed.scheme not in ['http', 'https']:
+        if not parsed.scheme or not parsed.netloc:
+            return URL_INVALID, 422
+        if parsed.scheme not in ('http', 'https'):
             return URL_INVALID, 422
     except ValueError:
         return URL_INVALID, 422
